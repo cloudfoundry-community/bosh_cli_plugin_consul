@@ -80,14 +80,18 @@ module Bosh::Cli::Command
             t.add_separator
           end
 
+          tags = item["ServiceTags"] || []
           dns = ["#{item["ServiceName"]}.service.#{domain}"]
+          tags.each do |tag|
+            dns << "#{tag}.#{item["ServiceName"]}.service.#{domain}"
+          end
 
           t << [
             same_as_previous ? "" : item["ServiceName"],
             same_as_previous ? "" : item["ServiceID"],
             item["Address"],
             item["ServicePort"],
-            (item["ServiceTags"] || []).join(", "),
+            tags.join(", "),
             dns.join(", ")
           ]
           previous_name = item["ServiceName"]
