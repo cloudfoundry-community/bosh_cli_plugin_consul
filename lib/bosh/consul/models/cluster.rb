@@ -1,9 +1,12 @@
 class Bosh::Consul::Models::Cluster
   attr_reader :director_client
-  attr_reader :leader, :peers
+  attr_reader :leader, :peers, :domain
 
   def initialize(director_client)
     @director_client = director_client
+
+    # FIXME: waiting on an API endpoint to discover the domain
+    @domain = "consul"
   end
 
   # A [re-]initialization method to get IPs for a cluster

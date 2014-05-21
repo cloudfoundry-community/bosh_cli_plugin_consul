@@ -35,7 +35,7 @@ module Bosh::Cli::Command
       show_cluster(cluster)
 
       consul_config = config.read("consul") || {}
-      consul_config[target] = { "leader" => cluster.leader, "peers" => cluster.peers }
+      consul_config[target] = { "leader" => cluster.leader, "peers" => cluster.peers, "domain" => cluster.domain }
       config.write_global("consul", consul_config)
       config.save
 
@@ -61,6 +61,7 @@ module Bosh::Cli::Command
       require "bosh/consul"
 
       cluster = load_cluster
+      domain = cluster.domain
 
       services = Bosh::Consul::Models::Services.new
       require "pp"
@@ -68,19 +69,22 @@ module Bosh::Cli::Command
 
       previous_name = nil
       view = table(items) do |t|
-        t.headings = ["name", "service id", "ip", "port", "tags"]
+        t.headings = ["name", "service id", "ip", "port", "tags", "dns"]
         items.each do |item|
           same_as_previous = (previous_name == item["ServiceName"])
           if previous_name && !same_as_previous
             t.add_separator
           end
 
+          dns = ["#{item["ServiceName"]}.service.#{domain}"]
+
           t << [
             same_as_previous ? "" : item["ServiceName"],
             same_as_previous ? "" : item["ServiceID"],
             item["Address"],
             item["ServicePort"],
-            item["ServiceTags"]
+            (item["ServiceTags"] || []).join(", "),
+            dns.join(", ")
           ]
           previous_name = item["ServiceName"]
         end
