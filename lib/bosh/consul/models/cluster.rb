@@ -1,5 +1,3 @@
-require "rest_client"
-
 class Bosh::Consul::Models::Cluster
   attr_reader :director_client
   attr_reader :leader, :peers

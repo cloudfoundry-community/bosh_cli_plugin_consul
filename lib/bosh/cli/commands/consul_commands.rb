@@ -51,9 +51,7 @@ module Bosh::Cli::Command
       require "bosh/consul"
 
       verify_target_consul_config
-      leader_ip = target_consul_config["leader"]
-      cluster = Bosh::Consul::Models::Cluster.new(director)
-      cluster.load_from_agent(leader_ip)
+      cluster = load_cluster
       show_cluster(cluster)
     end
 
@@ -61,6 +59,33 @@ module Bosh::Cli::Command
     desc "display services advertises on consul"
     def display_services
       require "bosh/consul"
+
+      cluster = load_cluster
+
+      services = Bosh::Consul::Models::Services.new
+      require "pp"
+      items = services.load_from_ip(cluster.leader)
+
+      previous_name = nil
+      view = table(items) do |t|
+        t.headings = ["name", "service id", "ip", "port", "tags"]
+        items.each do |item|
+          same_as_previous = (previous_name == item["ServiceName"])
+          if previous_name && !same_as_previous
+            t.add_separator
+          end
+
+          t << [
+            same_as_previous ? "" : item["ServiceName"],
+            same_as_previous ? "" : item["ServiceID"],
+            item["Address"],
+            item["ServicePort"],
+            item["ServiceTags"]
+          ]
+          previous_name = item["ServiceName"]
+        end
+      end
+      say(view)
 
     end
 
@@ -80,6 +105,13 @@ module Bosh::Cli::Command
       unless target_consul_config
         err "First target a consul deployment with 'bosh target consul'"
       end
+    end
+
+    def load_cluster
+      leader_ip = target_consul_config["leader"]
+      cluster = Bosh::Consul::Models::Cluster.new(director)
+      cluster.load_from_agent(leader_ip)
+      cluster
     end
   end
 end
