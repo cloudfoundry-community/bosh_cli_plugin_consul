@@ -23,8 +23,12 @@ module Bosh::Cli::Command
 
     usage "target consul"
     desc  "target a consul cluster"
-    def target_consul(deployment_name)
+    def target_consul(deployment_name=nil)
       require "bosh/consul"
+
+      unless deployment_name
+        deployment_name = prompt_for_deployment
+      end
 
       say "Fetching consul cluster info from deployment '#{deployment_name}'..."
       cluster = Bosh::Consul::Models::Cluster.new(director)
@@ -94,6 +98,18 @@ module Bosh::Cli::Command
     end
 
     private
+    def prompt_for_deployment
+      names = director.list_deployments.map { |deployment| deployment["name"] }
+      return names.first if names.size == 1
+
+      choose do |menu|
+        menu.prompt = 'Choose a deployment: '
+        names.each do |name|
+          menu.choice(name) { name }
+        end
+      end
+    end
+
     def show_cluster(cluster)
       say('Leader'.ljust(10) + cluster.leader)
       say('Peers'.ljust(10) + cluster.peers.join(", "))
