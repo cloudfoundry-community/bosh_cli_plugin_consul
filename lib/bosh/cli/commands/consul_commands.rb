@@ -61,8 +61,10 @@ module Bosh::Cli::Command
 
     usage "consul services"
     desc "display services advertises on consul"
+    option "--dns", "show dns hostnames"
     def display_services
       require "bosh/consul"
+      show_dns = options[:dns]
 
       cluster = load_cluster
       domain = cluster.domain
@@ -73,7 +75,8 @@ module Bosh::Cli::Command
 
       previous_name = nil
       view = table(items) do |t|
-        t.headings = ["name", "service id", "ip", "port", "tags", "dns"]
+        t.headings = ["name", "service id", "ip", "port", "tags"]
+        t.headings << "dns" if show_dns
         items.each do |item|
           same_as_previous = (previous_name == item["ServiceName"])
           if previous_name && !same_as_previous
@@ -81,19 +84,23 @@ module Bosh::Cli::Command
           end
 
           tags = item["ServiceTags"] || []
-          dns = ["#{item["ServiceName"]}.service.#{domain}"]
-          tags.each do |tag|
-            dns << "#{tag}.#{item["ServiceName"]}.service.#{domain}"
+          if show_dns
+            dns = ["#{item["ServiceName"]}.service.#{domain}"]
+            tags.each do |tag|
+              dns << "#{tag}.#{item["ServiceName"]}.service.#{domain}"
+            end
           end
 
-          t << [
+          row = [
             same_as_previous ? "" : item["ServiceName"],
             same_as_previous ? "" : item["ServiceID"],
             item["Address"],
             item["ServicePort"],
-            tags.join(", "),
-            dns.join(", ")
+            tags.join(", ")
           ]
+          row << dns.join(", ") if show_dns
+          t << row
+
           previous_name = item["ServiceName"]
         end
       end
