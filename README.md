@@ -1,26 +1,70 @@
-# BoshCliPluginConsul
+BOSH CLI plugin for Consul
+==========================
 
-TODO: Write a gem description
+Installation
+------------
 
-## Installation
+Install via RubyGems:
 
-Add this line to your application's Gemfile:
+```
+$ gem install bosh_cli_plugin_consul
+```
 
-    gem 'bosh_cli_plugin_consul'
+Usage
+-----
 
-And then execute:
+To see the list of commands: `bosh consul`
 
-    $ bundle
+To use the CLI plugin, first target the consul cluster (`bosh target consul`).
 
-Or install it yourself as:
+### Target consul
 
-    $ gem install bosh_cli_plugin_consul
+The CLI can discover the consul cluster from any BOSH deployment using consul. The consul cluster does not even have to be managed by BOSH.
 
-## Usage
+```
+$ bosh target consul
+1. consul-warden
+2. redis-warden
+Choose a deployment: 2
+Fetching consul cluster info from deployment 'redis-warden'...
 
-TODO: Write usage instructions here
+Current consul cluster from deployment 'redis-warden'        OK
+Leader    10.244.4.6
+Peers     10.244.4.14, 10.244.4.6, 10.244.4.10
+```
 
-## Contributing
+### View services
+
+```
+$ bosh consul services
++--------------+--------------+-------------+------+--------+
+| name         | service id   | ip          | port | tags   |
++--------------+--------------+-------------+------+--------+
+| consul       | consul       | 10.244.4.6  | 8300 |        |
+|              |              | 10.244.4.10 | 8300 |        |
+|              |              | 10.244.4.14 | 8300 |        |
++--------------+--------------+-------------+------+--------+
+| redis-warden | redis-warden | 10.244.2.6  | 6379 | master |
+|              |              | 10.244.2.14 | 6379 | slave  |
+|              |              | 10.244.2.10 | 6379 | slave  |
++--------------+--------------+-------------+------+--------+
+
+$ bosh consul services --dns
++--------------+--------------+-------------+------+--------+-----------------------------------------------------------------+
+| name         | service id   | ip          | port | tags   | dns                                                             |
++--------------+--------------+-------------+------+--------+-----------------------------------------------------------------+
+| consul       | consul       | 10.244.4.6  | 8300 |        | consul.service.consul                                           |
+|              |              | 10.244.4.10 | 8300 |        | consul.service.consul                                           |
+|              |              | 10.244.4.14 | 8300 |        | consul.service.consul                                           |
++--------------+--------------+-------------+------+--------+-----------------------------------------------------------------+
+| redis-warden | redis-warden | 10.244.2.6  | 6379 | master | redis-warden.service.consul, master.redis-warden.service.consul |
+|              |              | 10.244.2.14 | 6379 | slave  | redis-warden.service.consul, slave.redis-warden.service.consul  |
+|              |              | 10.244.2.10 | 6379 | slave  | redis-warden.service.consul, slave.redis-warden.service.consul  |
++--------------+--------------+-------------+------+--------+-----------------------------------------------------------------+
+```
+
+Contributing
+------------
 
 1. Fork it ( https://github.com/[my-github-username]/bosh_cli_plugin_consul/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
