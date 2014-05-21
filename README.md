@@ -1,6 +1,8 @@
 BOSH CLI plugin for Consul
 ==========================
 
+If you're using consul within your BOSH deployments (such as [redis-boshrelease](https://github.com/cloudfoundry-community/redis-boshrelease#consul-service-advertisement)), or running a cluster of consul servers ([consul-boshrelease](https://github.com/cloudfoundry-community/consul-boshrelease)), this BOSH CLI plugin is a very handy ops tool.
+
 Installation
 ------------
 
