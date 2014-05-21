@@ -25,6 +25,7 @@ module Bosh::Cli::Command
     desc  "target a consul cluster"
     def target_consul(deployment_name)
       require "bosh/consul"
+
       say "Fetching consul cluster info for deployment '#{deployment_name}'..."
       cluster = Bosh::Consul::Models::Cluster.new(director)
       cluster.load_from_deployment_name(deployment_name)
@@ -33,21 +34,33 @@ module Bosh::Cli::Command
       end
       show_cluster(cluster)
 
+      consul_config = config.read("consul") || {}
+      consul_config[target] = { "leader" => cluster.leader, "peers" => cluster.peers }
+      config.write_global("consul", consul_config)
+      config.save
+
     rescue Bosh::Cli::ValidationHalted
       err errors.first
-    rescue => e
-      puts e.message
+    # rescue => e
+    #   puts e.message
     end
 
     usage "consul status"
     desc "display status of target consul cluster"
     def display_status
+      require "bosh/consul"
 
+      verify_target_consul_config
+      leader_ip = target_consul_config["leader"]
+      cluster = Bosh::Consul::Models::Cluster.new(director)
+      cluster.load_from_agent(leader_ip)
+      show_cluster(cluster)
     end
 
     usage "consul services"
     desc "display services advertises on consul"
     def display_services
+      require "bosh/consul"
 
     end
 
@@ -55,6 +68,18 @@ module Bosh::Cli::Command
     def show_cluster(cluster)
       say('Leader'.ljust(10) + cluster.leader)
       say('Peers'.ljust(10) + cluster.peers.join(", "))
+    end
+
+    # loads consul configuration for the target director
+    def target_consul_config
+      consul_config = config.read("consul") || {}
+      consul_config[target]
+    end
+
+    def verify_target_consul_config
+      unless target_consul_config
+        err "First target a consul deployment with 'bosh target consul'"
+      end
     end
   end
 end

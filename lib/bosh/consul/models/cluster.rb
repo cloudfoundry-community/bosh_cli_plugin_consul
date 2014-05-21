@@ -10,11 +10,17 @@ class Bosh::Consul::Models::Cluster
 
   # A [re-]initialization method to get IPs for a cluster
   def load_from_deployment_name(deployment_name)
-    @leader = nil
+    @leader = @peers = nil
+
     # fetch_vm_state raises error if name invalid
     vms = director_client.fetch_vm_state(deployment_name)
     deployment_ips = vms.map {|vm| vm["ips"].first }
     discover_from_ips(deployment_ips)
+  end
+
+  def load_from_agent(leader_ip)
+    @leader = @peers = nil
+    discover_from_ips([leader_ip])
   end
 
   # Discover the consul cluster from the IPs of servers or clients to the cluster
@@ -22,8 +28,8 @@ class Bosh::Consul::Models::Cluster
     ip = ips.first
     api = consul_api(ip)
     if @leader = api["/v1/status/leader"].get
-      @leader =~ /"(.*)"/
-      @leader = $1
+      @leader =~ /"(.*):(\d+)"/
+      @leader, @cluster_port = $1, $2
       @peers = JSON.parse(api["/v1/status/peers"].get)
     end
   end
