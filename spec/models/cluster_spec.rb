@@ -13,4 +13,9 @@ describe Bosh::Consul::Models::Cluster do
     subject.load_from_deployment_name("foobar")
   end
 
+  it "can load cluster from single IP of consul server or agent" do
+    expect(subject).to receive(:discover_from_ips).with(["10.244.4.2"])
+    subject.load_from_agent("10.244.4.2")
+  end
+
 end

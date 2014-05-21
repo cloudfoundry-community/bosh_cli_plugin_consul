@@ -26,10 +26,10 @@ module Bosh::Cli::Command
     def target_consul(deployment_name)
       require "bosh/consul"
 
-      say "Fetching consul cluster info for deployment '#{deployment_name}'..."
+      say "Fetching consul cluster info from deployment '#{deployment_name}'..."
       cluster = Bosh::Consul::Models::Cluster.new(director)
       cluster.load_from_deployment_name(deployment_name)
-      step("Current consul cluster '#{deployment_name}'", "Cannot find consul cluster '#{deployment_name}'", :fatal) do
+      step("Current consul cluster from deployment '#{deployment_name}'", "Cannot find consul cluster '#{deployment_name}'", :fatal) do
         cluster.valid?
       end
       show_cluster(cluster)
