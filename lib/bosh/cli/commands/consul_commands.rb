@@ -31,10 +31,12 @@ module Bosh::Cli::Command
       step("Current consul cluster '#{deployment_name}'", "Cannot find consul cluster '#{deployment_name}'", :fatal) do
         cluster.valid?
       end
-      p cluster.consul_ips
-      
+      show_cluster(cluster)
+
     rescue Bosh::Cli::ValidationHalted
       err errors.first
+    rescue => e
+      puts e.message
     end
 
     usage "consul status"
@@ -47,6 +49,12 @@ module Bosh::Cli::Command
     desc "display services advertises on consul"
     def display_services
 
+    end
+
+    private
+    def show_cluster(cluster)
+      say('Leader'.ljust(10) + cluster.leader)
+      say('Peers'.ljust(10) + cluster.peers.join(", "))
     end
   end
 end
