@@ -24,13 +24,17 @@ class Bosh::Consul::Models::Cluster
   end
 
   # Discover the consul cluster from the IPs of servers or clients to the cluster
+  # Setups up @leader & @peers IP addresses
   def discover_from_ips(ips)
     ip = ips.first
-    api = consul_api(ip)
-    if @leader = api["/v1/status/leader"].get
+    if @leader = get(ip, "/v1/status/leader")
       @leader =~ /"(.*):(\d+)"/
       @leader, @cluster_port = $1, $2
-      @peers = JSON.parse(api["/v1/status/peers"].get)
+      @peers = JSON.parse(get(ip, "/v1/status/peers"))
+      @peers.map! do |peer|
+        peer =~ /(.*):(\d+)/
+        $1
+      end
     end
   end
 
@@ -39,6 +43,10 @@ class Bosh::Consul::Models::Cluster
   end
 
   private
+  def get(ip, path)
+    consul_api(ip)[path].get
+  end
+
   def consul_api(ip)
     RestClient::Resource.new("http://#{ip}:8500")
   end
