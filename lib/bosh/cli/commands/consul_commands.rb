@@ -1,3 +1,5 @@
+$:.unshift(File.expand_path("../../../..", __FILE__))
+
 module Bosh::Cli::Command
   class ConsulCommands < Base
     include Bosh::Cli::Validation
